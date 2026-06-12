@@ -9,7 +9,7 @@ export default function FileConverter({ onBack }: FileConverterProps) {
   const [hasError, setHasError] = useState(false);
 
   return (
-    <div className="w-full h-full relative bg-black/50 border border-white/10 rounded-3xl overflow-hidden flex flex-col">
+    <div className="w-full h-full flex flex-col">
       <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/40 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <FileArchive className="w-5 h-5 text-amber-400" />
@@ -36,7 +36,8 @@ export default function FileConverter({ onBack }: FileConverterProps) {
         ) : (
           <iframe
             src="https://modifio.vercel.app/"
-            className="w-full h-full border-0 block"
+            className="w-full border-none block"
+            style={{ height: 'calc(100vh - 120px)' }}
             title="File Converter App"
             onError={() => setHasError(true)}
           />
