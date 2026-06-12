@@ -711,14 +711,15 @@ export default function App() {
 
         {/* Main Interface */}
         <main className="flex-1 flex flex-col w-full relative overflow-hidden h-full">
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className="max-w-4xl mx-auto w-full p-6 pb-72">
+          {showFileConverter ? (
+            <div className="w-full" style={{ minHeight: 'calc(100vh - 70px)' }}>
+              <FileConverter onBack={() => { setShowFileConverter(false); window.history.pushState({}, '', '/'); }} />
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="max-w-4xl mx-auto w-full p-6 pb-72">
 
-              {showFileConverter ? (
-                <div className="flex-1 bg-white/[0.02] border border-white/10 rounded-3xl overflow-hidden flex flex-col relative group h-full min-h-[600px]">
-                  <FileConverter onBack={() => { setShowFileConverter(false); window.history.pushState({}, '', '/'); }} />
-                </div>
-              ) : mode === 'settings' ? (
+                {mode === 'settings' ? (
                 <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                   <motion.section
                     initial={{ opacity: 0, y: 20 }}
@@ -1001,7 +1002,7 @@ export default function App() {
                 </>
               )}
             </div>
-          </div>
+          )}
         </main>
       </div>
 
