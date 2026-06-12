@@ -1,0 +1,6 @@
+{
+  "name": "PDFCraft Pro",
+  "description": "A clean, fast, responsive online document utility website to merge, split, compress, protect, watermark, convert, and summarize documents with Gemini AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

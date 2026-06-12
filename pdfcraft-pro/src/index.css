@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
+
+  /* Professional Navy & Dark Blue Palette */
+  --color-blue-50: #f2f5fa;
+  --color-blue-100: #e1e9f5;
+  --color-blue-200: #cbd8ec;
+  --color-blue-300: #a7bedd;
+  --color-blue-400: #7899cc;
+  --color-blue-500: #4b73b5;
+  --color-blue-600: #1e3a8a; /* Classic Royal Navy Blue */
+  --color-blue-700: #1d2d5e; /* Navy Indigo Accent */
+  --color-blue-800: #151e3f; /* Deep Midnight Navy */
+  --color-blue-900: #0f1329; /* Dark Navy Base */
+  --color-blue-950: #0a0c1a; /* Darkest Navy */
+
+  /* Neutral Slate Palette with Soft Navy/Ice Undertones */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+}
+
+/* Custom fade transitions and subtle scrollbars for lists */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

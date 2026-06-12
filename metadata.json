@@ -1,0 +1,8 @@
+{
+  "name": "OmniGen AI",
+  "description": "A multi-modal generative AI platform for text, image, video, and script generation.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

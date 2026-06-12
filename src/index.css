@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Restrict Tailwind v4 scanning to only known source directories.
+   This prevents it from scanning pdfcraft-pro or any nested sub-project
+   that may reference assets (SVGs, fonts, etc.) that don't exist at
+   the omnigen-ai root level — which caused the css-analysis ENOENT error. */
+@source "../src/**/*.{ts,tsx,html}";
+@source "../pdfcraft-pro/src/**/*.{ts,tsx}";
