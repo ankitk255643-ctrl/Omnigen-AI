@@ -586,7 +586,15 @@ export default function App() {
                   <Video className="w-4 h-4 text-emerald-400" /> Video Stream
                 </button>
                 <button
-                  onClick={() => setShowFileConverter(true)}
+                  onClick={() => {
+                    setShowFileConverter(true);
+                    setShowAssistantPage(false);
+                    setShowVideoEditor(false);
+                    setShowVoiceCommand(false);
+                    setShowVideoStream(false);
+                    setShowPdfConverter(false);
+                    window.history.pushState({}, '', '/file-converter');
+                  }}
                   className="hover:bg-white/10 transition-colors flex items-center gap-3 px-3 py-2.5 rounded-xl text-left"
                 >
                   <FileArchive className="w-4 h-4 text-amber-400" /> File Converter
