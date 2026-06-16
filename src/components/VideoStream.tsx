@@ -16,9 +16,9 @@ export default function VideoStream({ onBack }: VideoStreamProps) {
         <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
       </button>
 
-      {/* We assume the Video Stream (Vite) runs on port 5173 */}
+      {/* We assume the Video Stream (Vite) runs on port 5000 */}
       <iframe
-        src="http://localhost:5173"
+        src="http://localhost:5000"
         className="w-full h-full border-0 block"
         title="Video Stream App"
       />

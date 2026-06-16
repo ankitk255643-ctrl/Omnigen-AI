@@ -122,9 +122,17 @@ export default function App() {
         setShowVideoEditor(false);
         setShowVoiceCommand(false);
         setShowVideoStream(false);
+      } else if (path === '/video-stream') {
+        setShowVideoStream(true);
+        setShowPdfConverter(false);
+        setShowFileConverter(false);
+        setShowAssistantPage(false);
+        setShowVideoEditor(false);
+        setShowVoiceCommand(false);
       } else {
         setShowPdfConverter(false);
         setShowFileConverter(false);
+        setShowVideoStream(false);
       }
     };
 
@@ -142,6 +150,13 @@ export default function App() {
       setShowVideoEditor(false);
       setShowVoiceCommand(false);
       setShowVideoStream(false);
+    } else if (window.location.pathname === '/video-stream') {
+      setShowVideoStream(true);
+      setShowPdfConverter(false);
+      setShowFileConverter(false);
+      setShowAssistantPage(false);
+      setShowVideoEditor(false);
+      setShowVoiceCommand(false);
     }
 
     window.addEventListener('popstate', handlePopState);
@@ -500,7 +515,11 @@ export default function App() {
   }
 
   if (showVideoStream) {
-    return <VideoStream onBack={() => setShowVideoStream(false)} />;
+    return (
+      <div className="h-screen w-full bg-[#0a0a0a]">
+        <VideoStream onBack={() => { setShowVideoStream(false); window.history.pushState({}, '', '/'); }} />
+      </div>
+    );
   }
 
   if (showFileConverter) {
@@ -584,7 +603,15 @@ export default function App() {
                   <Mic className="w-4 h-4 text-blue-400" /> Voice Command
                 </button>
                 <button
-                  onClick={() => setShowVideoStream(true)}
+                  onClick={() => {
+                    setShowVideoStream(true);
+                    setShowAssistantPage(false);
+                    setShowVideoEditor(false);
+                    setShowVoiceCommand(false);
+                    setShowFileConverter(false);
+                    setShowPdfConverter(false);
+                    window.history.pushState({}, '', '/video-stream');
+                  }}
                   className="hover:bg-white/10 transition-colors flex items-center gap-3 px-3 py-2.5 rounded-xl text-left"
                 >
                   <Video className="w-4 h-4 text-emerald-400" /> Video Stream
