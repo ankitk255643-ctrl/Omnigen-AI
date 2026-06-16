@@ -503,7 +503,13 @@ export default function App() {
     return <VideoStream onBack={() => setShowVideoStream(false)} />;
   }
 
-
+  if (showFileConverter) {
+    return (
+      <div className="h-screen w-full bg-[#0a0a0a] p-4 sm:p-6">
+        <FileConverter onBack={() => { setShowFileConverter(false); window.history.pushState({}, '', '/'); }} />
+      </div>
+    );
+  }
 
   if (showPdfConverter) {
     return (
@@ -714,11 +720,7 @@ export default function App() {
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             <div className="max-w-4xl mx-auto w-full p-6 pb-72">
 
-              {showFileConverter ? (
-                <div className="flex-1 bg-white/[0.02] border border-white/10 rounded-3xl overflow-hidden flex flex-col relative group h-full min-h-[600px]">
-                  <FileConverter onBack={() => { setShowFileConverter(false); window.history.pushState({}, '', '/'); }} />
-                </div>
-              ) : mode === 'settings' ? (
+              {mode === 'settings' ? (
                 <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                   <motion.section
                     initial={{ opacity: 0, y: 20 }}
