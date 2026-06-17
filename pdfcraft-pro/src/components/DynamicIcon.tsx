@@ -9,7 +9,7 @@ interface DynamicIconProps {
 
 export default function DynamicIcon({ name, className = '', size }: DynamicIconProps) {
   // Map our special names just in case they don't match standard casing
-  const IconComponent = (Icons as Record<string, React.ComponentType<any>>)[name];
+  const IconComponent = (Icons as unknown as Record<string, React.ComponentType<any>>)[name];
 
   if (!IconComponent) {
     // Return a default document icon if not found

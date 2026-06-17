@@ -1,6 +1,6 @@
 # OmniGen AI Subscription Tiers
 
-Based on the compute requirements, API costs, and feature complexity of OmniGen AI, here is a proposed breakdown for the subscription tiers: Basic, Pro, Epic, and Customised.
+Based on the compute requirements, API costs, and feature complexity of OmniGen AI, here is a proposed breakdown for the subscription tiers: Basic , Pro, Epic, and Customised.
 
 ## 1. Basic (Free / Entry-Level)
 *Pricing: ₹75/month (Max for Indian Students)*

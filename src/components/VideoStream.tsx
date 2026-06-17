@@ -16,9 +16,9 @@ export default function VideoStream({ onBack }: VideoStreamProps) {
         <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
       </button>
 
-      {/* We assume the Video Stream (Vite) runs on port 5000 */}
+      {/* Fallback to localhost if VITE_VIDEO_STREAM_URL is not set in Vercel */}
       <iframe
-        src="http://localhost:5000"
+        src={import.meta.env.VITE_VIDEO_STREAM_URL || "http://localhost:5000"}
         className="w-full h-full border-0 block"
         title="Video Stream App"
       />

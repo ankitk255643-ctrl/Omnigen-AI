@@ -873,13 +873,21 @@ export default function App() {
                                 Upload a file or type a command. I'll automatically detect the best tool to handle your request.
                               </p>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              {['Remove background', 'Convert to PDF', 'Generate Image', 'Write Code', 'Convert File'].map(s => (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                              {['Remove background', 'Convert to PDF', 'Generate Image', 'Write Code', 'Convert File', 'Video Stream'].map(s => (
                                 <button
                                   key={s}
                                   onClick={() => {
                                     if (s === 'Convert File') {
                                       setShowFileConverter(true);
+                                    } else if (s === 'Video Stream') {
+                                      setShowVideoStream(true);
+                                      setShowAssistantPage(false);
+                                      setShowVideoEditor(false);
+                                      setShowVoiceCommand(false);
+                                      setShowFileConverter(false);
+                                      setShowPdfConverter(false);
+                                      window.history.pushState({}, '', '/video-stream');
                                     } else {
                                       setInput(s);
                                     }
@@ -1006,6 +1014,21 @@ export default function App() {
                               className="p-2 hover:bg-white/10 rounded-xl text-white/40 hover:text-white transition-all"
                             >
                               <FileText className="w-5 h-5 text-rose-400" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowVideoStream(true);
+                                setShowAssistantPage(false);
+                                setShowVideoEditor(false);
+                                setShowVoiceCommand(false);
+                                setShowFileConverter(false);
+                                setShowPdfConverter(false);
+                                window.history.pushState({}, '', '/video-stream');
+                              }}
+                              title="Video Stream"
+                              className="p-2 hover:bg-white/10 rounded-xl text-white/40 hover:text-white transition-all"
+                            >
+                              <Video className="w-5 h-5 text-teal-400" />
                             </button>
                             <button
                               onClick={() => fileInputRef.current?.click()}
