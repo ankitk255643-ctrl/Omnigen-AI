@@ -79,82 +79,70 @@ export default function VoiceCommand({ onBack }: VoiceCommandProps) {
     setStatus(`Processing: "${text}"`);
     
     // Remove punctuation that speech recognition might add
-    const command = text.toLowerCase().trim().replace(/[.,!?]$/, '');
+    let command = text.toLowerCase().trim().replace(/[.,!?]$/, '');
     
-    // Basic Regex Parsing for App / Website
-    const openMatch = command.match(/^open\s+(.+)$/i);
-    
-    if (openMatch) {
-      let target = openMatch[1].trim();
-      
-      // Determine if it's a website
-      const isWebsite = target.includes('.') || 
-                        target.includes('youtube') || 
-                        target.includes('google') ||
-                        target.includes('facebook');
-                        
-      if (isWebsite) {
-        setStatus(`Opening website: ${target}`);
-        // Add domains if it's just a word
-        if (!target.includes('.')) {
-          target = `${target}.com`;
-        }
-        if (!target.startsWith('http')) {
-          target = `https://${target}`;
-        }
-        
-        // Remove spaces for url
-        target = target.replace(/\s+/g, '');
-        window.open(target, '_blank');
-        setTimeout(() => setStatus('Website opened successfully!'), 1000);
-      } else {
-        // It's a local app
-        let execTarget = target;
-        const appMap: Record<string, string> = {
-          'calculator': 'calc',
-          'notepad': 'notepad',
-          'vs code': 'code',
-          'visual studio code': 'code',
-          'paint': 'mspaint',
-          'ms paint': 'mspaint',
-          'ms word': 'winword',
-          'word': 'winword',
-          'excel': 'excel',
-          'ms excel': 'excel',
-          'powerpoint': 'powerpnt',
-          'ms powerpoint': 'powerpnt',
-          'chrome': 'chrome',
-          'google chrome': 'chrome',
-          'file explorer': 'explorer',
-          'explorer': 'explorer',
-          'camera': 'microsoft.windows.camera:',
-          'antigravity': 'antigravity',
-          'codex': 'codex'
-        };
+    // Match "open X" or "go to X"
+    const prefixMatch = command.match(/^(?:open|go to)\s+(.+)$/i);
+    let target = prefixMatch ? prefixMatch[1].trim() : command;
 
-        if (appMap[target]) {
-          execTarget = appMap[target];
-        }
+    const appMap: Record<string, string> = {
+      'calculator': 'calc',
+      'notepad': 'notepad',
+      'vs code': 'code',
+      'visual studio code': 'code',
+      'paint': 'mspaint',
+      'ms paint': 'mspaint',
+      'ms word': 'winword',
+      'word': 'winword',
+      'excel': 'excel',
+      'ms excel': 'excel',
+      'powerpoint': 'powerpnt',
+      'ms powerpoint': 'powerpnt',
+      'chrome': 'chrome',
+      'google chrome': 'chrome',
+      'file explorer': 'explorer',
+      'explorer': 'explorer',
+      'camera': 'microsoft.windows.camera:',
+      'antigravity': 'antigravity',
+      'codex': 'codex'
+    };
 
-        setStatus(`Opening application: ${target}`);
-        try {
-          const res = await fetch('/api/open-app', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ target: execTarget })
-          });
-          const data = await res.json();
-          if (data.success) {
-            setStatus(`Successfully opened ${target}!`);
-          } else {
-            setStatus(`Failed to open ${target}.`);
-          }
-        } catch (error) {
-          setStatus('Error connecting to backend.');
+    if (appMap[target]) {
+      // It's a local app
+      const execTarget = appMap[target];
+      setStatus(`Opening application: ${target}`);
+      try {
+        const res = await fetch('/api/open-app', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target: execTarget })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setStatus(`Successfully opened ${target}!`);
+        } else {
+          setStatus(`Failed to open ${target}.`);
         }
+      } catch (error) {
+        setStatus('Error connecting to backend.');
       }
     } else {
-      setStatus('Could not understand command. Try saying "Open calculator"');
+      // If it's not a known local app, assume it's a website search or domain
+      setStatus(`Opening website: ${target}`);
+      let url = target;
+      
+      // Add domains if it's just a word
+      if (!url.includes('.')) {
+        url = `${url}.com`;
+      }
+      if (!url.startsWith('http')) {
+        url = `https://${url}`;
+      }
+      
+      // Remove spaces for url
+      url = url.replace(/\s+/g, '');
+      window.open(url, '_blank');
+      setTimeout(() => setStatus('Website opened successfully!'), 1000);
     }
     
     setProcessing(false);

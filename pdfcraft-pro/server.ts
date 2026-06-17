@@ -5,7 +5,7 @@ import { createServer as createViteServer } from 'vite';
 import multer from 'multer';
 import dotenv from 'dotenv';
 import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
-import { GoogleGenAI } from '@google/genai';
+import OpenAI from 'openai';
 
 dotenv.config();
 
@@ -102,17 +102,28 @@ const saveDB = (db: LocalDB) => {
 // In production, use standard JWT/Cookies - but for a single-view, developer sandbox,
 // passing simple userId in headers or query is highly stable, fast, and easy to preview.
 
-// Shared Gemini Setup
-let ai: GoogleGenAI | null = null;
-if (process.env.GEMINI_API_KEY) {
-  ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      },
-    },
-  });
+// Shared OpenAI Setup for Agents
+const kimiClient = new OpenAI({
+  apiKey: process.env.KIMI_API_KEY,
+  baseURL: process.env.KIMI_API_KEY?.startsWith('sk-') && !process.env.KIMI_API_KEY.includes('aiml') ? undefined : "https://api.aimlapi.com"
+});
+
+const embeddingClient = new OpenAI({
+  apiKey: process.env.TEXT_EMBEDED_3_LARGE_API_KEY,
+  baseURL: process.env.TEXT_EMBEDED_3_LARGE_API_KEY?.startsWith('sk-') && !process.env.TEXT_EMBEDED_3_LARGE_API_KEY.includes('aiml') ? "https://api.openai.com/v1" : "https://api.aimlapi.com"
+});
+
+// Helper for Cosine Similarity
+function cosineSimilarity(vecA: number[], vecB: number[]) {
+  let dotProduct = 0.0;
+  let normA = 0.0;
+  let normB = 0.0;
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
 // PDF Text Extraction Helper Function (Rough PDF text reader in pure Node)
@@ -1039,21 +1050,15 @@ app.post('/api/ai/summarize-pdf', async (req, res) => {
     if (summaryStyle === 'bullet') styleInst = 'Provide a structured, bulleted list of core arguments and facts.';
     if (summaryStyle === 'chapter-wise') styleInst = 'Generate a detailed, chapter-by-chapter / section-by-section outline summary.';
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: `
-You are an elite academic and professional document analyst. Review the following text extracted from a PDF and summarize it according to this instruction: "${styleInst}"
-
-TEXT DETAILS:
-Document Name: ${f.originalName}
-Size: ${f.fileSize} bytes
-
-EXTRACTED NATIVE CONTENT:
-${rawText}
-      `,
+    const response = await kimiClient.chat.completions.create({
+      model: 'kimi-thinking',
+      messages: [{
+        role: "system",
+        content: `You are an elite academic and professional document analyst. Review the following text extracted from a PDF and summarize it according to this instruction: "${styleInst}"\n\nTEXT DETAILS:\nDocument Name: ${f.originalName}\nSize: ${f.fileSize} bytes\n\nEXTRACTED NATIVE CONTENT:\n${rawText}`
+      }]
     });
 
-    const summaryText = response.text || 'Unable to generate summary response.';
+    const summaryText = response.choices[0].message.content || 'Unable to generate summary response.';
     res.json({ success: true, summary: summaryText });
   } catch (err: any) {
     res.status(500).json({ error: 'AI summary failed: ' + err.message });
@@ -1075,17 +1080,15 @@ app.post('/api/ai/translate-pdf', async (req, res) => {
     const fileBytes = fs.readFileSync(f.serverPath);
     const rawText = extractTextFromPDFBuffer(fileBytes);
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: `
-You are a highly accurate, layout-preserving professional translator. Translate the following text extracted from a PDF document into ${targetLanguage}. Keep original formatting conventions, mathematical references, and bullet-point hierarchy where possible.
-
-EXTRACTED TEXT TO TRANSLATE:
-${rawText}
-      `,
+    const response = await kimiClient.chat.completions.create({
+      model: 'kimi-thinking',
+      messages: [{
+        role: "system",
+        content: `You are a highly accurate, layout-preserving professional translator. Translate the following text extracted from a PDF document into ${targetLanguage}. Keep original formatting conventions, mathematical references, and bullet-point hierarchy where possible.\n\nEXTRACTED TEXT TO TRANSLATE:\n${rawText}`
+      }]
     });
 
-    const translatedText = response.text || 'Unable to generate translated output.';
+    const translatedText = response.choices[0].message.content || 'Unable to generate translated output.';
 
     // Compile translated text back into a new PDF!
     const transDoc = await PDFDocument.create();
@@ -1131,11 +1134,13 @@ ${rawText}
   }
 });
 
+// Document Vector Cache
+const documentVectors: Record<string, { chunks: string[], vectors: number[][] }> = {};
+
 // AI Chat with PDF
 app.post('/api/ai/chat-with-pdf', async (req, res) => {
   const { fileId, question, history } = req.body;
   if (!fileId || !question) return res.status(400).json({ error: 'PDF file and question are required' });
-  if (!ai) return res.status(503).json({ error: 'Gemini AI API Key not initialized' });
 
   const db = loadDB();
   const f = db.files.find((file) => file.id === fileId);
@@ -1145,25 +1150,58 @@ app.post('/api/ai/chat-with-pdf', async (req, res) => {
     const fileBytes = fs.readFileSync(f.serverPath);
     const docText = extractTextFromPDFBuffer(fileBytes);
 
-    // Contextual chat
-    const chat = ai.chats.create({
-      model: 'gemini-3.5-flash',
-      config: {
-        systemInstruction: `
-You are "PDFCraft Pro AI Chatbot", a helpful assistant answering detailed questions about the uploaded document "${f.originalName}".
-Use the following extracted text context to answer all questions accuracy. If information isn't in the page context, answer honestly using standard reasoning.
+    // 1. Generate Embeddings for chunks if not cached
+    if (!documentVectors[fileId]) {
+      // Chunk the text into roughly 1000 character segments
+      const chunks = docText.match(/.{1,1000}/g) || [docText];
+      
+      const embedResponse = await embeddingClient.embeddings.create({
+        model: "text-embedding-3-large",
+        input: chunks
+      });
+      
+      documentVectors[fileId] = {
+        chunks: chunks,
+        vectors: embedResponse.data.map(d => d.embedding)
+      };
+    }
+
+    // 2. Embed the user's question
+    const queryEmbedResponse = await embeddingClient.embeddings.create({
+      model: "text-embedding-3-large",
+      input: question
+    });
+    const queryVector = queryEmbedResponse.data[0].embedding;
+
+    // 3. Find top 3 most relevant chunks
+    const cache = documentVectors[fileId];
+    const similarities = cache.vectors.map((vec, idx) => ({
+      idx,
+      score: cosineSimilarity(queryVector, vec)
+    }));
+    similarities.sort((a, b) => b.score - a.score);
+    const topChunks = similarities.slice(0, 3).map(s => cache.chunks[s.idx]).join('\\n\\n');
+
+    // 4. Generate response using Kimi with the retrieved context
+    const response = await kimiClient.chat.completions.create({
+      model: 'kimi-thinking',
+      messages: [
+        {
+          role: "system",
+          content: `You are "PDFCraft Pro AI Chatbot" File Search Agent.
+Answer the user's question based ONLY on the following retrieved context chunks from "${f.originalName}".
+If information isn't in the context, answer honestly.
 
 CONTEXT:
-${docText}
-        `,
-      },
+${topChunks}`
+        },
+        { role: "user", content: question }
+      ]
     });
 
-    // Send history context if available to maintain thread
-    const response = await chat.sendMessage({ message: question });
-    res.json({ success: true, answer: response.text });
+    res.json({ success: true, answer: response.choices[0].message.content });
   } catch (err: any) {
-    res.status(500).json({ error: 'Interactive chat failed: ' + err.message });
+    res.status(500).json({ error: 'Interactive RAG chat failed: ' + err.message });
   }
 });
 

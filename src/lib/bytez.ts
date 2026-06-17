@@ -1,33 +1,26 @@
 export async function generateGemmaResponse(prompt: string) {
-  const apiKey = (import.meta as any).env.VITE_BYTEZ_API_KEY || "40f10119ce13d90306423fd7adfbd090";
-  const modelId = "google/gemma-4-31B-it";
-  
   try {
-    const response = await fetch(`https://api.bytez.com/v1/models/${modelId}/run`, {
+    const res = await fetch('/api/ai/generate-text', {
       method: 'POST',
       headers: {
-        'Authorization': `Key ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        messages: [
-          {
-            role: "user",
-            "content": prompt
-          }
-        ]
+        prompt: prompt,
+        systemInstruction: "You are an expert software engineer." // Routes to deepseek-reasoner
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
 
-    const data = await response.json();
-    return data.output;
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    
+    return data.text;
   } catch (error) {
-    console.error("Bytez API Error:", error);
+    console.error("DeepSeek Proxy Error:", error);
     throw error;
   }
 }
