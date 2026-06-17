@@ -23,7 +23,7 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
     console.error('Error fetching profile:', error);
     throw error;
   }
-  
+
   return data;
 };
 

@@ -69,22 +69,14 @@ async function startServer() {
   // --- OMNIGEN MULTI-AGENT SECURE BACKEND ---
   
   const getAgentClient = (modelName) => {
-    let apiKey = process.env.GROK_API_KEY; // Default
-    let baseURL = "https://api.aimlapi.com";
-    
-    if (modelName === 'deepseek-reasoner') apiKey = process.env.DEEPSEEK_API_KEY;
-    if (modelName === 'llama-70b-fast') apiKey = process.env['LAMA_70B-FAST_API_KEY'];
-    if (modelName === 'gpt-4o') {
-      apiKey = process.env.GPT_4O_API_KEY;
-      baseURL = apiKey && !apiKey.startsWith('sk-vIg') ? "https://api.openai.com/v1" : "https://api.aimlapi.com";
-    }
-    if (modelName === 'kimi-thinking') apiKey = process.env.KIMI_API_KEY;
-    if (modelName === 'grok-beta') apiKey = process.env.GROK_API_KEY;
-
-    // Use default OpenAI behavior if it's an actual OpenAI key, else AIML proxy
+    // User requested to use Gemini API key only for AI assistant, code generation, and responses.
+    // We use the OpenAI compatibility layer for Gemini API.
     return {
-      client: new OpenAI({ apiKey, baseURL: (apiKey && apiKey.startsWith('sk-proj') ? undefined : "https://api.aimlapi.com") }),
-      model: modelName
+      client: new OpenAI({ 
+        apiKey: process.env.GEMINI_API_KEY, 
+        baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/" 
+      }),
+      model: "gemini-2.5-flash" // Fix API Error
     };
   };
 
@@ -209,6 +201,7 @@ async function startServer() {
       }
       res.json({ text: message.content });
     } catch (error) {
+      console.error("AI Assistant API Error:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -228,6 +221,7 @@ async function startServer() {
        });
        res.json({ text: response.choices[0].message.content });
      } catch (err) {
+       console.error("AI Assistant Tool Reply API Error:", err);
        res.status(500).json({ error: err.message });
      }
   });

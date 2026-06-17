@@ -41,8 +41,6 @@ import PdfCraftApp from '../pdfcraft-pro/src/App';
 import AuthModal from './components/AuthModal';
 import { onAuthStateChange, logoutUser } from './services/authService';
 import { getUserProfile, UserProfile } from './services/profileService';
-import HiggsfieldImageGen from './components/HiggsfieldImageGen';
-import HiggsfieldVideoGen from './components/HiggsfieldVideoGen';
 
 type Mode = 'text-to-video' | 'text-to-script' | 'text-to-prompt' | 'text-to-image' | 'image-to-text' | 'video-to-text' | 'image-to-video' | 'settings' | 'text-to-code' | 'ai-assistant' | 'gemma-chat' | 'text-to-pdf' | 'word-to-pdf' | 'image-merger' | 'bg-remover' | 'text-to-song' | 'watermark-remover' | 'pdf-editor' | 'text-to-video-picsart' | 'image-to-video-picsart' | 'text-to-audio-picsart';
 
@@ -79,11 +77,9 @@ export default function App() {
   const [showVideoStream, setShowVideoStream] = useState(false);
   const [showFileConverter, setShowFileConverter] = useState(false);
   const [showPdfConverter, setShowPdfConverter] = useState(false);
-  const [showImageGen, setShowImageGen] = useState(false);
-  const [showVideoGen, setShowVideoGen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [mergedImages, setMergedImages] = useState<string[]>([]);
-  
+
   // Auth state
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -110,23 +106,58 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const handlePathChange = (path: string) => {
-      setShowPdfConverter(path === '/pdf-converter');
-      setShowFileConverter(path === '/file-converter');
-      setShowVideoStream(path === '/video-stream');
-      setShowImageGen(path === '/image-generation');
-      setShowVideoGen(path === '/video-generation');
-      
-      if (['/pdf-converter', '/file-converter', '/video-stream', '/image-generation', '/video-generation'].includes(path)) {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/pdf-converter') {
+        setShowPdfConverter(true);
         setShowAssistantPage(false);
         setShowVideoEditor(false);
         setShowVoiceCommand(false);
+        setShowVideoStream(false);
+        setShowFileConverter(false);
+      } else if (path === '/file-converter') {
+        setShowFileConverter(true);
+        setShowPdfConverter(false);
+        setShowAssistantPage(false);
+        setShowVideoEditor(false);
+        setShowVoiceCommand(false);
+        setShowVideoStream(false);
+      } else if (path === '/video-stream') {
+        setShowVideoStream(true);
+        setShowPdfConverter(false);
+        setShowFileConverter(false);
+        setShowAssistantPage(false);
+        setShowVideoEditor(false);
+        setShowVoiceCommand(false);
+      } else {
+        setShowPdfConverter(false);
+        setShowFileConverter(false);
+        setShowVideoStream(false);
       }
     };
 
-    const handlePopState = () => handlePathChange(window.location.pathname);
-    
-    handlePathChange(window.location.pathname);
+    if (window.location.pathname === '/pdf-converter') {
+      setShowPdfConverter(true);
+      setShowAssistantPage(false);
+      setShowVideoEditor(false);
+      setShowVoiceCommand(false);
+      setShowVideoStream(false);
+      setShowFileConverter(false);
+    } else if (window.location.pathname === '/file-converter') {
+      setShowFileConverter(true);
+      setShowPdfConverter(false);
+      setShowAssistantPage(false);
+      setShowVideoEditor(false);
+      setShowVoiceCommand(false);
+      setShowVideoStream(false);
+    } else if (window.location.pathname === '/video-stream') {
+      setShowVideoStream(true);
+      setShowPdfConverter(false);
+      setShowFileConverter(false);
+      setShowAssistantPage(false);
+      setShowVideoEditor(false);
+      setShowVoiceCommand(false);
+    }
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -521,21 +552,13 @@ export default function App() {
     );
   }
 
-  if (showImageGen) {
-    return <HiggsfieldImageGen onBack={() => { setShowImageGen(false); window.history.pushState({}, '', '/'); }} />;
-  }
-
-  if (showVideoGen) {
-    return <HiggsfieldVideoGen onBack={() => { setShowVideoGen(false); window.history.pushState({}, '', '/'); }} />;
-  }
-
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-purple-500/30 flex flex-col">
       {/* Header */}
       <header className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 cursor-pointer border border-transparent hover:border-purple-500/20 px-2 py-1 rounded-xl transition-all" onClick={() => { setShowAssistantPage(false); setShowVideoEditor(false); setShowVoiceCommand(false); setShowVideoStream(false); setShowFileConverter(false); setShowPdfConverter(false); setShowImageGen(false); setShowVideoGen(false); setMode('ai-assistant'); window.history.pushState({}, '', '/'); }}>
+            <div className="flex items-center gap-2 cursor-pointer border border-transparent hover:border-purple-500/20 px-2 py-1 rounded-xl transition-all" onClick={() => { setShowAssistantPage(false); setShowVideoEditor(false); setShowVoiceCommand(false); setShowVideoStream(false); setShowFileConverter(false); setShowPdfConverter(false); setMode('ai-assistant'); window.history.pushState({}, '', '/'); }}>
               <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
@@ -555,38 +578,6 @@ export default function App() {
             </button>
           </div>
           <nav className="flex items-center gap-6 text-sm font-medium text-white/60">
-            <button
-              onClick={() => {
-                setShowImageGen(true);
-                setShowAssistantPage(false);
-                setShowVideoEditor(false);
-                setShowVoiceCommand(false);
-                setShowFileConverter(false);
-                setShowPdfConverter(false);
-                setShowVideoGen(false);
-                setShowVideoStream(false);
-                window.history.pushState({}, '', '/image-generation');
-              }}
-              className="hover:text-white transition-colors flex items-center gap-2"
-            >
-              <ImageIcon className="w-4 h-4" /> Image Generation
-            </button>
-            <button
-              onClick={() => {
-                setShowVideoGen(true);
-                setShowAssistantPage(false);
-                setShowVideoEditor(false);
-                setShowVoiceCommand(false);
-                setShowFileConverter(false);
-                setShowPdfConverter(false);
-                setShowImageGen(false);
-                setShowVideoStream(false);
-                window.history.pushState({}, '', '/video-generation');
-              }}
-              className="hover:text-white transition-colors flex items-center gap-2"
-            >
-              <Video className="w-4 h-4" /> Video Generation
-            </button>
             <button
               onClick={() => setShowAssistantPage(true)}
               className="hover:text-purple-400 transition-colors flex items-center gap-2 font-semibold text-purple-400/90"
@@ -688,7 +679,7 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={() => setShowAuthModal(true)}
                 className="px-4 py-2 bg-white text-black rounded-full text-xs font-bold hover:bg-white/90 transition-colors"
               >
@@ -745,9 +736,9 @@ export default function App() {
 
         {/* Modals */}
         {showAuthModal && (
-          <AuthModal 
-            onClose={() => setShowAuthModal(false)} 
-            onSuccess={() => setShowAuthModal(false)} 
+          <AuthModal
+            onClose={() => setShowAuthModal(false)}
+            onSuccess={() => setShowAuthModal(false)}
           />
         )}
 
