@@ -224,6 +224,41 @@ const upload = multer({ storage });
      }
   });
 
+  // --- PDFCRAFT AI ENDPOINTS ---
+  app.post("/api/ai/summarize-pdf", express.json({limit: '50mb'}), async (req, res) => {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) return res.status(401).json({ error: "Gemini API Key is not configured." });
+      const { text, summaryStyle } = req.body;
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `Summarize the following text using a ${summaryStyle || 'concise'} style:\n\n${text.substring(0, 10000)}`;
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+      res.json({ summary: response.text });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/ai/translate-pdf", express.json({limit: '50mb'}), async (req, res) => {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) return res.status(401).json({ error: "Gemini API Key is not configured." });
+      const { text, targetLanguage } = req.body;
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `Translate the following text to ${targetLanguage || 'English'}:\n\n${text.substring(0, 10000)}`;
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+      res.json({ translatedText: response.text });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // --- END OMNIGEN SECURE BACKEND ---
 
   // Higgsfield Mock APIs

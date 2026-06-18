@@ -20,6 +20,7 @@ export interface FileRecord {
   pageCount?: number;
   createdAt: string;
   expiresAt: string;
+  localFile?: File; // Store local file reference for client-side processing
 }
 
 export interface TaskRecord {
